@@ -3,6 +3,7 @@ package br.com.alura.agenda.ui.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -11,20 +12,29 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.List;
+
 import br.com.alura.agenda.R;
 import br.com.alura.agenda.dao.AlunoDao;
+import br.com.alura.agenda.model.Aluno;
+
+import static br.com.alura.agenda.ui.activity.ConstantesActivities.CHAVE_ALUNO;
 
 public class ListaAlunosActivity extends AppCompatActivity {
     public static final String TITULO_APPBAR = "Lista de alunos";
+
     final AlunoDao alunoDao = new AlunoDao();
+    private ArrayAdapter<Aluno> adapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lista_alunos);
         setTitle(TITULO_APPBAR);
-
         configuraFabNovoAluno();
+        configuraLista();
+        alunoDao.salva(new Aluno("Maria", "4512-78456", "maria@gmail.com"));
+        alunoDao.salva(new Aluno("Mariana", "4513-9874", "mariana@gmail.com"));
     }
 
     private void configuraFabNovoAluno() {
@@ -32,12 +42,12 @@ public class ListaAlunosActivity extends AppCompatActivity {
         botaoNovoAluno.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                abreFormularioAlunoActivity();
+                abreFormularioModoInsereAluno();
             }
         });
     }
 
-    private void abreFormularioAlunoActivity() {
+    private void abreFormularioModoInsereAluno() {
         startActivity(new Intent(this,
                 FormularioAlunoActivity.class));
     }
@@ -45,14 +55,60 @@ public class ListaAlunosActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        configuraLista();
+        atualizaAlunos();
+    }
+
+    private void atualizaAlunos() {
+        adapter.clear();
+        adapter.addAll(alunoDao.todos());
     }
 
     private void configuraLista() {
         ListView listaDeAluno = findViewById(R.id.activity_lista_alunos_listview);
-        listaDeAluno.setAdapter(new ArrayAdapter<>(
+        configuraAdapter(listaDeAluno);
+        configraListenerDeCliquePorItem(listaDeAluno);
+        configuraListenerDeCliqueLongoPorItem(listaDeAluno);
+
+    }
+
+    private void configuraListenerDeCliqueLongoPorItem(ListView listaDeAluno) {
+        listaDeAluno.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view,
+                                           int posicao, long id) {
+                Aluno alunoEscolhido = (Aluno) adapterView.getItemAtPosition(posicao);
+                remove(alunoEscolhido);
+                return true;
+            }
+        });
+    }
+
+    private void remove(Aluno aluno) {
+        alunoDao.remove(aluno);
+        adapter.remove(aluno);
+    }
+
+    private void configraListenerDeCliquePorItem(ListView listaDeAluno) {
+        listaDeAluno.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int posicao, long id) {
+                Aluno alunoEscolhido = (Aluno) adapterView.getItemAtPosition(posicao);
+                abreFormularioModoEditaAluno(alunoEscolhido);
+            }
+        });
+    }
+
+    private void abreFormularioModoEditaAluno(Aluno aluno) {
+        Intent vaiParaFormularioActivity = new Intent(ListaAlunosActivity.this,
+                FormularioAlunoActivity.class);
+        vaiParaFormularioActivity.putExtra(CHAVE_ALUNO, aluno);
+        startActivity(vaiParaFormularioActivity);
+    }
+
+    private void configuraAdapter(ListView listaDeAluno) {
+        adapter = new ArrayAdapter<>(
                 this,
-                android.R.layout.simple_list_item_1,
-                alunoDao.todos()));
+                android.R.layout.simple_list_item_1);
+        listaDeAluno.setAdapter(adapter);
     }
 }

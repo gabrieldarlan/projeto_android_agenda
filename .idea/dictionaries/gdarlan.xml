@@ -2,9 +2,15 @@
   <dictionary name="gdarlan">
     <words>
       <w>aluno</w>
+      <w>finaliza</w>
       <w>formulario</w>
+      <w>inicializacao</w>
       <w>lista</w>
       <w>novo</w>
+      <w>preenche</w>
+      <w>salva</w>
+      <w>telefone</w>
+      <w>valido</w>
     </words>
   </dictionary>
 </component>
