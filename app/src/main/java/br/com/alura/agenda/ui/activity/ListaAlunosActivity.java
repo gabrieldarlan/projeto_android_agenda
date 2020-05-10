@@ -2,17 +2,18 @@ package br.com.alura.agenda.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
-import java.util.List;
 
 import br.com.alura.agenda.R;
 import br.com.alura.agenda.dao.AlunoDao;
@@ -33,12 +34,35 @@ public class ListaAlunosActivity extends AppCompatActivity {
         setTitle(TITULO_APPBAR);
         configuraFabNovoAluno();
         configuraLista();
+
         alunoDao.salva(new Aluno("Maria", "4512-78456", "maria@gmail.com"));
         alunoDao.salva(new Aluno("Mariana", "4513-9874", "mariana@gmail.com"));
     }
 
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, view, menuInfo);
+        getMenuInflater().inflate(R.menu.activity_lista_menu, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+
+        int itemId = item.getItemId();
+
+        if (itemId == R.id.activity_lista_alunos_menu_remover) {
+            AdapterView.AdapterContextMenuInfo menuInfo =
+                    (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+            Aluno alunoEscolhido = adapter.getItem(menuInfo.position);
+            remove(alunoEscolhido);
+        }
+
+        return super.onContextItemSelected(item);
+    }
+
     private void configuraFabNovoAluno() {
-        FloatingActionButton botaoNovoAluno = findViewById(R.id.activity_lista_alunos_fab_novo_aluno);
+        FloatingActionButton botaoNovoAluno =
+                findViewById(R.id.activity_lista_alunos_fab_novo_aluno);
         botaoNovoAluno.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -67,21 +91,9 @@ public class ListaAlunosActivity extends AppCompatActivity {
         ListView listaDeAluno = findViewById(R.id.activity_lista_alunos_listview);
         configuraAdapter(listaDeAluno);
         configraListenerDeCliquePorItem(listaDeAluno);
-        configuraListenerDeCliqueLongoPorItem(listaDeAluno);
-
+        registerForContextMenu(listaDeAluno);
     }
 
-    private void configuraListenerDeCliqueLongoPorItem(ListView listaDeAluno) {
-        listaDeAluno.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view,
-                                           int posicao, long id) {
-                Aluno alunoEscolhido = (Aluno) adapterView.getItemAtPosition(posicao);
-                remove(alunoEscolhido);
-                return true;
-            }
-        });
-    }
 
     private void remove(Aluno aluno) {
         alunoDao.remove(aluno);
